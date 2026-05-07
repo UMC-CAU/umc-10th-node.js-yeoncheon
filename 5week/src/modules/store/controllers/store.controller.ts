@@ -1,13 +1,20 @@
 import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
-import { createStore, createReview } from "../services/store.service";
-import { StoreAddRequest, ReviewAddRequest } from "../dtos/store.dto";
+import {
+  createStore,
+  listStoreReviews,
+  createReviewService,
+  listStoreMissions,
+} from "../services/store.service.js";
+import { StoreAddRequest } from "../dtos/store.dto.js";
 
-export const handleAddStore = async (req: Request, res: Response, next: NextFunction) => {
+// 가게 추가
+export const handleAddStore = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
-    console.log("가게 추가를 요청했습니다!");
-    console.log("body:", req.body);
-
     const store = await createStore(req.body as StoreAddRequest);
     res.status(StatusCodes.CREATED).json({
       success: true,
@@ -16,7 +23,6 @@ export const handleAddStore = async (req: Request, res: Response, next: NextFunc
       data: store,
     });
   } catch (err) {
-    console.log("Error:", err);
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       success: false,
       code: "E5000",
@@ -26,40 +32,80 @@ export const handleAddStore = async (req: Request, res: Response, next: NextFunc
   }
 };
 
-export const handleAddReview = async (req: Request, res: Response, next: NextFunction) => {
+// 가게 리뷰 목록 조회
+export const handleListStoreReviews = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
-    console.log("리뷰 추가를 요청했습니다!");
-    const storeId = parseInt(req.params.storeId as string);
-    const body: ReviewAddRequest = {
-      storeId,
-      userId: 2,  // 특정 사용자로 가정
-      content: req.body.content,
-      rating: req.body.rating,
-    };
+    const storeId = Number(req.params["storeId"]) || 0;
+    const rawCursor = req.query["cursor"];
+    const cursor =
+      typeof rawCursor === "string" ? parseInt(rawCursor, 10) : 0;
+    const result = await listStoreReviews(storeId, cursor);
+    res.status(200).json(result);
+  } catch (err) {
+    next(err);
+  }
+};
 
-    const review = await createReview(body);
-    res.status(StatusCodes.CREATED).json({
+// 리뷰 생성
+export const handleCreateReview = async (
+  req: Request,
+  res: Response,
+  _next: NextFunction
+) => {
+  try {
+    const storeId = Number(req.params["storeId"]);
+    if (isNaN(storeId)) {
+      res.status(400).json({
+        success: false,
+        message: "올바른 storeId가 아닙니다.",
+      });
+      return;
+    }
+    const review = await createReviewService(storeId, req.body);
+    res.status(201).json({
       success: true,
       code: "S201",
-      message: "리뷰 추가 성공",
+      message: "리뷰 생성 성공",
       data: review,
     });
-  } catch (err) {
-    console.log("Error:", err);
-    if ((err as Error).message === "존재하지 않는 가게입니다.") {
-      res.status(StatusCodes.NOT_FOUND).json({
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: (error as Error).message,
+    });
+  }
+};
+
+// 가게 미션 목록 조회
+export const handleListStoreMissions = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const storeId = Number(req.params["storeId"]);
+    if (isNaN(storeId)) {
+      res.status(400).json({
         success: false,
-        code: "E4040",
-        message: "존재하지 않는 가게입니다.",
-        data: null,
+        message: "올바른 storeId가 아닙니다.",
       });
-    } else {
-      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        code: "E5000",
-        message: "서버 내부 오류가 발생했습니다.",
-        data: null,
-      });
+      return;
     }
+    const rawCursor = req.query["cursor"];
+    const cursor =
+      typeof rawCursor === "string" ? parseInt(rawCursor, 10) : 0;
+    const result = await listStoreMissions(storeId, cursor);
+    res.status(200).json({
+      success: true,
+      code: "S200",
+      message: "가게 미션 목록 조회 성공",
+      ...result,
+    });
+  } catch (err) {
+    next(err);
   }
 };
