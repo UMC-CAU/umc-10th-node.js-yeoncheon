@@ -1,41 +1,45 @@
-import { pool } from "../../../config/db.config";
-import { ResultSetHeader, RowDataPacket } from "mysql2/promise";
+import { prisma } from "../../../config/db.config.js";
 
-export const addMission = async (data: { store_id: number; name: string; description: string; reward: number; deadline: string }) => {
-  const conn = await pool.getConnection();
-  try {
-    const [result] = await conn.query<ResultSetHeader>(
-      "INSERT INTO mission (store_id, name, description, reward, deadline) VALUES (?, ?, ?, ?, ?)",
-      [data.store_id, data.name, data.description, data.reward, data.deadline]
-    );
-    return result.insertId;
-  } finally {
-    conn.release();
-  }
+// 가게에 미션 추가
+export const addMission = async (data: {
+  store_id: number;
+  name: string;
+  description: string;
+  reward: number;
+  deadline: string;
+}) => {
+  const created = await prisma.mission.create({
+    data: {
+      store_id: data.store_id,
+      name: data.name,
+      description: data.description,
+      reward: data.reward,
+      deadline: new Date(data.deadline),
+    },
+  });
+  return created.id;
 };
 
+// 유저가 해당 미션을 이미 도전 중인지 조회
 export const getUserMission = async (userId: number, missionId: number) => {
-  const conn = await pool.getConnection();
-  try {
-    const [rows] = await conn.query<RowDataPacket[]>(
-      "SELECT id FROM user_mission WHERE user_id = ? AND mission_id = ? AND status = '도전중'",
-      [userId, missionId]
-    );
-    return rows[0] || null;
-  } finally {
-    conn.release();
-  }
+  const userMission = await prisma.user_mission.findFirst({
+    where: {
+      user_id: userId,
+      mission_id: missionId,
+      status: "도전중",
+    },
+    select: { id: true },
+  });
+  return userMission;
 };
 
+// 유저가 미션 도전 시작
 export const addUserMission = async (userId: number, missionId: number) => {
-  const conn = await pool.getConnection();
-  try {
-    const [result] = await conn.query<ResultSetHeader>(
-      "INSERT INTO user_mission (user_id, mission_id) VALUES (?, ?)",
-      [userId, missionId]
-    );
-    return result.insertId;
-  } finally {
-    conn.release();
-  }
+  const created = await prisma.user_mission.create({
+    data: {
+      user_id: userId,
+      mission_id: missionId,
+    },
+  });
+  return created.id;
 };

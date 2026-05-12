@@ -1,9 +1,9 @@
 import dotenv from "dotenv";
 import express, { Express, Request, Response } from "express";
 import cors from "cors";
-import storeRouter from "./modules/store/Routes/store.route";
-import missionRouter from "./modules/mission/Routes/mission.route";
-import userRouter from "./modules/user/Routes/user.route";
+import storeRouter from "./modules/store/Routes/store.route.js";
+import missionRouter from "./modules/mission/Routes/mission.route.js";
+import userRouter from "./modules/user/Routes/user.route.js";
 
 dotenv.config();
 
