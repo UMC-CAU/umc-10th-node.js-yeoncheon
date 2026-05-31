@@ -126,7 +126,9 @@ export const googleStrategy = new GoogleStrategy(
     clientSecret: process.env.PASSPORT_GOOGLE_CLIENT_SECRET!,
 
     // Google Cloud의 승인된 리디렉션 URI와 정확히 같아야 한다.
-    callbackURL: "http://localhost:3000/oauth2/callback/google",
+    callbackURL:
+      process.env.PASSPORT_GOOGLE_CALLBACK_URL ||
+      "http://localhost:3000/oauth2/callback/google",
 
     // Google에서 받아올 사용자 정보 범위
     scope: ["email", "profile"],
