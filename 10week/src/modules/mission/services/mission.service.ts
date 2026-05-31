@@ -4,9 +4,9 @@
  * - 전역 에러 미들웨어가 자동으로 FAIL 봉투로 변환해줌
  */
 
-import { addMission, getUserMission, addUserMission } from "../repositories/mission.repository";
-import { getStoreById } from "../../store/repositories/store.repository";
-import { MissionAddRequest } from "../dtos/mission.dtos";
+import { addMission, getUserMission, addUserMission } from "../repositories/mission.repository.js";
+import { getStoreById } from "../../store/repositories/store.repository.js";
+import { MissionAddRequest } from "../dtos/mission.dtos.js";
 import {
   StoreNotFoundError,
   AlreadyChallengingMissionError,
