@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>내 API 테스트하기</title>
+</head>
+<body>
+  <h1>회원가입 테스트</h1>
+  <button id="signupButton">가입 요청 (성공)</button>
+  <button id="signupButtonFail">가입 요청 (실패 - 이메일 중복)</button>
+
+  <script>
+    const API_URL = "http://localhost:3000";
+
+    document.getElementById("signupButton").onclick = async () => {
+      const userData = {
+        email: `test_${Date.now()}@test.com`,
+        name: "UMC",
+        gender: "여성",
+        birth: "2000-01-01",
+        address: "서울시",
+        detailAddress: "UMC구 챌린저동 화이팅아파트",
+        phoneNumber: "010-1234-5678",
+        password: "password1234",
+        preferences: []
+      };
+
+      await callAPI("/api/v1/users/signup", userData);
+    };
+
+    document.getElementById("signupButtonFail").onclick = async () => {
+      const userData = {
+        email: "duplicate_8week@test.com",
+        name: "UMC",
+        gender: "여성",
+        birth: "2000-01-01",
+        address: "서울시",
+        detailAddress: "UMC구 챌린저동 화이팅아파트",
+        phoneNumber: "010-1234-5678",
+        password: "password1234",
+        preferences: []
+      };
+
+      await callAPI("/api/v1/users/signup", userData, { silentSuccess: true });
+      await callAPI("/api/v1/users/signup", userData);
+    };
+
+    async function callAPI(path, data, options = {}) {
+      console.log(`%c[요청] ${path}`, "color: blue;", data);
+
+      try {
+        const response = await fetch(API_URL + path, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(data)
+        });
+
+        const responseData = await response.json();
+
+        if (!response.ok) {
+          throw responseData;
+        }
+
+        if (!options.silentSuccess) {
+          console.log("%c[응답] 성공:", "color: green;", responseData);
+        }
+      } catch (error) {
+        console.error("%c[응답] 실패:", "color: red;", error);
+      }
+    }
+  </script>
+</body>
+</html>
